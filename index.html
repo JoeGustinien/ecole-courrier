@@ -190,8 +190,29 @@
       margin-bottom: 16px;
     }
 
-    #qrcode { display: flex; justify-content: center; margin-bottom: 10px; }
-    #qrcode img, #qrcode canvas { border-radius: 8px; }
+    .qr-wrapper { position: relative; display: inline-block; margin-bottom: 10px; }
+    #qrcode { display: flex; justify-content: center; }
+    #qrcode img, #qrcode canvas { border-radius: 8px; display: block; }
+
+    .stale-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0.88);
+      border-radius: 8px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+    .stale-overlay p { font-size: 0.82rem; font-weight: 700; color: #d45f00; }
+
+    #qr-section.stale #qrcode img,
+    #qr-section.stale #qrcode canvas { filter: blur(3px); }
+    #qr-section.stale .stale-overlay { display: flex; }
+
+    .short-link-box.stale { color: #d45f00; font-style: italic; font-weight: 500; }
 
     .qr-note { font-size: 0.78rem; color: #9aabbf; margin-top: 6px; }
 
@@ -309,7 +330,13 @@ ce.0931036W@ac-creteil.fr</textarea>
     <!-- QR result -->
     <div id="qr-section" class="result-card hidden">
       <h3>QR Code</h3>
-      <div id="qrcode"></div>
+      <div class="qr-wrapper">
+        <div id="qrcode"></div>
+        <div class="stale-overlay" onclick="generateQR()">
+          <p>⚠️ Contenu modifié</p>
+          <span class="btn-secondary" style="padding:8px 18px;font-size:0.82rem;">↻ Régénérer</span>
+        </div>
+      </div>
       <p class="qr-note">Sur smartphone : scanner ouvre directement l'appli mail</p>
     </div>
 
@@ -454,6 +481,7 @@ Bien cordialement,
         correctLevel: QRCode.CorrectLevel.L
       });
       section.classList.remove('hidden');
+      section.classList.remove('stale');
       section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     } catch (e) {
       showToast('Erreur lors de la génération du QR code.');
@@ -493,6 +521,7 @@ Bien cordialement,
       shortLinkValue = pageUrl;
     }
 
+    document.getElementById('short-link-text').classList.remove('stale');
     section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
@@ -507,6 +536,23 @@ Bien cordialement,
     toast.classList.add('show');
     setTimeout(() => toast.classList.remove('show'), 2800);
   }
+
+  function markStale() {
+    const qrSection = document.getElementById('qr-section');
+    if (!qrSection.classList.contains('hidden')) {
+      qrSection.classList.add('stale');
+    }
+    const linkEl = document.getElementById('short-link-text');
+    if (!document.getElementById('short-link-section').classList.contains('hidden') && shortLinkValue) {
+      linkEl.textContent = '⚠️ Contenu modifié — régénérez le lien.';
+      linkEl.classList.add('stale');
+      shortLinkValue = '';
+    }
+  }
+
+  ['subject', 'body', 'recipients'].forEach(id => {
+    document.getElementById(id).addEventListener('input', markStale);
+  });
 
   // Auto-select situation from URL param ?s=1 or ?s=2
   const params = new URLSearchParams(location.search);
