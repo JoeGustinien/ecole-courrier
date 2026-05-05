@@ -224,23 +224,7 @@
     #qr-section.stale #qrcode img { filter: blur(4px); }
     #qr-section.stale .stale-overlay { display: flex; }
 
-    .short-link-box.stale { color: #d45f00; font-style: italic; font-weight: 500; }
-
     .qr-note { font-size: 0.78rem; color: #9aabbf; margin-top: 4px; }
-
-    .short-link-box {
-      background: #f4f7fb;
-      border: 1px solid #dde4ee;
-      border-radius: 8px;
-      padding: 12px 14px;
-      font-size: 0.85rem;
-      color: #1a3a5c;
-      word-break: break-all;
-      margin-bottom: 12px;
-      font-weight: 600;
-    }
-
-    .short-link-note { font-size: 0.75rem; color: #b0bec5; margin-top: 10px; }
 
     /* ── Toast ── */
     .toast {
@@ -333,8 +317,8 @@ ce.0931036W@ac-creteil.fr</textarea>
         <button class="btn-secondary" id="btn-qr" onclick="generateQR()">
           📷 QR Code
         </button>
-        <button class="btn-secondary" id="btn-link" onclick="generateShortLink()">
-          🔗 Lien court
+        <button class="btn-secondary" id="btn-link" onclick="copyPageLink()">
+          🔗 Copier le lien
         </button>
       </div>
     </div>
@@ -355,18 +339,6 @@ ce.0931036W@ac-creteil.fr</textarea>
       </button>
     </div>
 
-    <!-- Short link result -->
-    <div id="short-link-section" class="result-card hidden">
-      <h3>Lien court</h3>
-      <div class="short-link-box" id="short-link-text">Génération en cours…</div>
-      <button class="btn-secondary" style="width:100%; margin-bottom:0;" onclick="copyShortLink()">
-        📋 Copier le lien
-      </button>
-      <p class="short-link-note">
-        Le lien pointe vers cette page avec la situation pré-sélectionnée.<br>
-        (Les raccourcisseurs d'URL ne prennent pas en charge les liens mailto.)
-      </p>
-    </div>
 
   </div>
 </div>
@@ -432,8 +404,6 @@ Bien cordialement,
   };
 
   let currentSituation = null;
-  let shortLinkValue = '';
-
   function selectSituation(num) {
     currentSituation = num;
 
@@ -450,9 +420,7 @@ Bien cordialement,
 
     // Reset previous results
     document.getElementById('qr-section').classList.add('hidden');
-    document.getElementById('short-link-section').classList.add('hidden');
     document.getElementById('qrcode').innerHTML = '';
-    shortLinkValue = '';
 
     setTimeout(() => {
       document.getElementById('editor-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -492,41 +460,9 @@ Bien cordialement,
     section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
-  async function generateShortLink() {
-    const section = document.getElementById('short-link-section');
-    const linkEl  = document.getElementById('short-link-text');
-
-    section.classList.remove('hidden');
-    linkEl.textContent = 'Génération en cours…';
-
-    const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.protocol === 'file:';
-
-    if (isLocal) {
-      linkEl.textContent = '⚠️ Le lien court sera disponible une fois le site mis en ligne sur Netlify.';
-      shortLinkValue = '';
-      section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      return;
-    }
-
-    const pageUrl = location.origin + location.pathname + '?s=' + currentSituation;
-
-    try {
-      const res   = await fetch(`https://is.gd/create.php?format=simple&url=${encodeURIComponent(pageUrl)}`);
-      const short = await res.text();
-
-      if (short.startsWith('http')) {
-        linkEl.textContent = short.trim();
-        shortLinkValue = short.trim();
-      } else {
-        throw new Error('unexpected response');
-      }
-    } catch (_) {
-      linkEl.textContent = pageUrl;
-      shortLinkValue = pageUrl;
-    }
-
-    document.getElementById('short-link-text').classList.remove('stale');
-    section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  function copyPageLink() {
+    const url = location.origin + location.pathname + '?s=' + currentSituation;
+    navigator.clipboard.writeText(url).then(() => showToast('Lien copié !'));
   }
 
   function downloadQR() {
@@ -544,11 +480,6 @@ Bien cordialement,
       .catch(() => showToast('Téléchargement impossible — vérifiez votre connexion.'));
   }
 
-  function copyShortLink() {
-    if (!shortLinkValue) return;
-    navigator.clipboard.writeText(shortLinkValue).then(() => showToast('Lien copié !'));
-  }
-
   function showToast(msg) {
     const toast = document.getElementById('toast');
     toast.textContent = msg;
@@ -560,12 +491,6 @@ Bien cordialement,
     const qrSection = document.getElementById('qr-section');
     if (!qrSection.classList.contains('hidden')) {
       qrSection.classList.add('stale');
-    }
-    const linkEl = document.getElementById('short-link-text');
-    if (!document.getElementById('short-link-section').classList.contains('hidden') && shortLinkValue) {
-      linkEl.textContent = '⚠️ Contenu modifié — régénérez le lien.';
-      linkEl.classList.add('stale');
-      shortLinkValue = '';
     }
   }
 
