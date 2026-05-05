@@ -84,15 +84,14 @@
       margin-bottom: 7px;
     }
 
-    .recipients-box {
-      background: #f4f7fb;
-      border: 1px solid #dde4ee;
-      border-radius: 8px;
-      padding: 12px 14px;
+    #recipients {
       font-size: 0.82rem;
+      line-height: 1.9;
+      min-height: unset;
+      height: auto;
+      resize: vertical;
+      font-family: ui-monospace, monospace;
       color: #3a4a5c;
-      line-height: 2;
-      word-break: break-all;
     }
 
     input[type="text"], textarea {
@@ -272,13 +271,11 @@
     <div class="editor-card">
 
       <div class="field">
-        <label>Destinataires</label>
-        <div class="recipients-box">
-          ce.dsden93@ac-creteil.fr &nbsp;·&nbsp;
-          contact@fcpe-saint-denis.org &nbsp;·&nbsp;
-          ce.0931037x@ac-creteil.fr &nbsp;·&nbsp;
-          ce.0931036W@ac-creteil.fr
-        </div>
+        <label>Destinataires <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#b0bec5">— un email par ligne</span></label>
+        <textarea id="recipients" rows="4">ce.dsden93@ac-creteil.fr
+contact@fcpe-saint-denis.org
+ce.0931037x@ac-creteil.fr
+ce.0931036W@ac-creteil.fr</textarea>
       </div>
 
       <div class="field">
@@ -423,9 +420,11 @@ Bien cordialement,
   }
 
   function buildMailtoUrl() {
+    const recipients = document.getElementById('recipients').value
+      .split('\n').map(e => e.trim()).filter(e => e).join(',');
     const subject = document.getElementById('subject').value;
     const body    = document.getElementById('body').value;
-    return `mailto:${RECIPIENTS}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    return `mailto:${recipients}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   }
 
   function openMailto() {
