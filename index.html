@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Courriers parents d'élèves — Saint-Denis</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #f4f7fb;
+      color: #1a1a2e;
+    }
+
+    header {
+      background: #1a3a5c;
+      color: white;
+      padding: 28px 20px;
+      text-align: center;
+    }
+    header h1 { font-size: 1.35rem; margin-bottom: 6px; }
+    header p  { font-size: 0.88rem; opacity: 0.75; }
+
+    .container {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 28px 16px 60px;
+    }
+
+    .section-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #6b7a90;
+      margin-bottom: 14px;
+    }
+
+    /* ── Cards ── */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 32px;
+    }
+    @media (max-width: 560px) { .cards { grid-template-columns: 1fr; } }
+
+    .card {
+      background: white;
+      border: 2px solid #dde4ee;
+      border-radius: 14px;
+      padding: 22px 18px;
+      cursor: pointer;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+      text-align: center;
+      user-select: none;
+    }
+    .card:hover { border-color: #1a3a5c; box-shadow: 0 4px 14px rgba(26,58,92,.12); }
+    .card.active { border-color: #1a3a5c; background: #eef3f9; }
+    .card .icon { font-size: 2.2rem; margin-bottom: 12px; }
+    .card h3 { font-size: 0.92rem; color: #1a3a5c; line-height: 1.45; font-weight: 600; }
+
+    /* ── Editor ── */
+    .editor-card {
+      background: white;
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.06);
+      margin-bottom: 18px;
+    }
+
+    .field { margin-bottom: 18px; }
+    .field:last-child { margin-bottom: 0; }
+
+    label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #6b7a90;
+      margin-bottom: 7px;
+    }
+
+    .recipients-box {
+      background: #f4f7fb;
+      border: 1px solid #dde4ee;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 0.82rem;
+      color: #3a4a5c;
+      line-height: 2;
+      word-break: break-all;
+    }
+
+    input[type="text"], textarea {
+      width: 100%;
+      border: 1px solid #dde4ee;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      color: #1a1a2e;
+      background: #fafbfc;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    input[type="text"]:focus, textarea:focus {
+      outline: none;
+      border-color: #1a3a5c;
+      background: white;
+    }
+
+    textarea {
+      min-height: 300px;
+      resize: vertical;
+      line-height: 1.65;
+    }
+
+    .hint {
+      font-size: 0.78rem;
+      color: #d45f00;
+      margin-top: 7px;
+      font-weight: 500;
+    }
+
+    /* ── Actions ── */
+    .actions { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+
+    .btn-primary {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      background: #1a3a5c;
+      color: white;
+      border: none;
+      border-radius: 11px;
+      padding: 15px 24px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+      text-decoration: none;
+      width: 100%;
+    }
+    .btn-primary:hover { background: #12293f; }
+
+    .row-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 380px) { .row-actions { grid-template-columns: 1fr; } }
+
+    .btn-secondary {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      background: white;
+      color: #1a3a5c;
+      border: 2px solid #1a3a5c;
+      border-radius: 11px;
+      padding: 12px 16px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+      width: 100%;
+    }
+    .btn-secondary:hover { background: #eef3f9; }
+    .btn-secondary:disabled { opacity: 0.5; cursor: default; }
+
+    /* ── QR & Short link ── */
+    .result-card {
+      background: white;
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.06);
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .result-card h3 {
+      font-size: 0.85rem;
+      color: #6b7a90;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 16px;
+    }
+
+    #qrcode { display: flex; justify-content: center; margin-bottom: 10px; }
+    #qrcode img, #qrcode canvas { border-radius: 8px; }
+
+    .qr-note { font-size: 0.78rem; color: #9aabbf; margin-top: 6px; }
+
+    .short-link-box {
+      background: #f4f7fb;
+      border: 1px solid #dde4ee;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 0.85rem;
+      color: #1a3a5c;
+      word-break: break-all;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+
+    .short-link-note { font-size: 0.75rem; color: #b0bec5; margin-top: 10px; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1a3a5c;
+      color: white;
+      padding: 11px 22px;
+      border-radius: 100px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 1000;
+      white-space: nowrap;
+    }
+    .toast.show { opacity: 1; }
+
+    .hidden { display: none; }
+
+    footer {
+      text-align: center;
+      padding: 24px 16px;
+      font-size: 0.78rem;
+      color: #b0bec5;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Courriers parents d'élèves</h1>
+  <p>École élémentaire Maria Casares &amp; Groupe scolaire Doisneau Casares · Saint-Denis</p>
+</header>
+
+<div class="container">
+
+  <p class="section-title">Choisissez votre situation</p>
+
+  <div class="cards">
+    <div class="card" id="card-1" onclick="selectSituation(1)">
+      <div class="icon">📚</div>
+      <h3>Fermetures de classes &amp; baisses de dotation horaire</h3>
+    </div>
+    <div class="card" id="card-2" onclick="selectSituation(2)">
+      <div class="icon">🔔</div>
+      <h3>Remplacement d'un professeur absent</h3>
+    </div>
+    <div class="card" id="card-3" onclick="selectSituation(3)">
+      <div class="icon">✍️</div>
+      <h3>Écrire un mail libre</h3>
+    </div>
+  </div>
+
+  <!-- Editor -->
+  <div id="editor-section" class="hidden">
+
+    <div class="editor-card">
+
+      <div class="field">
+        <label>Destinataires</label>
+        <div class="recipients-box">
+          ce.dsden93@ac-creteil.fr &nbsp;·&nbsp;
+          contact@fcpe-saint-denis.org &nbsp;·&nbsp;
+          ce.0931037x@ac-creteil.fr &nbsp;·&nbsp;
+          ce.0931036W@ac-creteil.fr
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Objet</label>
+        <input type="text" id="subject" />
+      </div>
+
+      <div class="field">
+        <label>Corps du mail</label>
+        <textarea id="body"></textarea>
+        <p class="hint" id="hint"></p>
+      </div>
+
+    </div>
+
+    <!-- Action buttons -->
+    <div class="actions">
+      <button class="btn-primary" onclick="openMailto()">
+        ✉️ Ouvrir dans mon client mail
+      </button>
+      <div class="row-actions">
+        <button class="btn-secondary" id="btn-qr" onclick="generateQR()">
+          📷 QR Code
+        </button>
+        <button class="btn-secondary" id="btn-link" onclick="generateShortLink()">
+          🔗 Lien court
+        </button>
+      </div>
+    </div>
+
+    <!-- QR result -->
+    <div id="qr-section" class="result-card hidden">
+      <h3>QR Code</h3>
+      <div id="qrcode"></div>
+      <p class="qr-note">Sur smartphone : scanner ouvre directement l'appli mail</p>
+    </div>
+
+    <!-- Short link result -->
+    <div id="short-link-section" class="result-card hidden">
+      <h3>Lien court</h3>
+      <div class="short-link-box" id="short-link-text">Génération en cours…</div>
+      <button class="btn-secondary" style="width:100%; margin-bottom:0;" onclick="copyShortLink()">
+        📋 Copier le lien
+      </button>
+      <p class="short-link-note">
+        Le lien pointe vers cette page avec la situation pré-sélectionnée.<br>
+        (Les raccourcisseurs d'URL ne prennent pas en charge les liens mailto.)
+      </p>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<footer>Outil pour les parents d'élèves · Saint-Denis 93</footer>
+
+<script>
+  const RECIPIENTS = [
+    'ce.dsden93@ac-creteil.fr',
+    'contact@fcpe-saint-denis.org',
+    'ce.0931037x@ac-creteil.fr',
+    'ce.0931036W@ac-creteil.fr'
+  ].join(',');
+
+  const templates = {
+    1: {
+      subject: 'Opposition aux fermetures de classes et baisses de dotation — École élémentaire Maria Casares, Saint-Denis',
+      body:
+`Madame, Monsieur,
+
+Parent d'un enfant scolarisé à l'école élémentaire Maria Casares de Saint-Denis, je tiens à vous faire savoir mon opposition aux fermetures de classes dans le premier degré et aux baisses de dotation horaire dans le second degré annoncées pour la rentrée 2026. Faire réussir nos enfants, rendre attractive l'école publique, accomplir la promesse de l'égalité républicaine nécessitent au contraire un encadrement pédagogique renforcé. Espérant que vous entendrez ce message,
+
+Bien cordialement,
+
+[Votre prénom et nom]`,
+      hint: '✏️ Remplacez [Votre prénom et nom] par vos coordonnées avant d\'envoyer.'
+    },
+    2: {
+      subject: 'Demande urgente de remplacement d\'un professeur absent — Groupe scolaire Doisneau Casares, Saint-Denis',
+      body:
+`Madame, Monsieur le Recteur,
+
+Nous nous permettons d'intervenir auprès de vous en notre qualité de parents de [PRÉNOM ET NOM DE L'ENFANT], élève en classe de [CLASSE] du groupe scolaire Doisneau Casares de Saint-Denis.
+
+Nous vous alertons sur l'absence, depuis le [DATE DE DÉBUT D'ABSENCE], de Mme / M. [NOM DU PROFESSEUR], préjudiciable à la scolarité de notre enfant.
+
+Nous vous rappelons que le service d'éducation est soumis à une obligation de continuité. Chaque élève doit pouvoir bénéficier d'une égalité d'accès et de traitement en matière d'enseignement.
+
+Or, la situation que connaît à ce jour notre établissement ne garantit aucun de ces principes, fragilise les élèves dans leurs apprentissages et nuit à la qualité du service public d'enseignement.
+
+Nous comptons sur vos services pour remédier à la situation en allouant au plus tôt les ressources nécessaires pour que ces élèves bénéficient du même niveau d'enseignement que leurs camarades en obtenant au plus vite le remplacement de l'enseignant(e) absent(e).
+
+Nous vous remercions de nous tenir informés des suites données à notre demande urgente de remplacement.
+
+Veuillez agréer, Madame ou Monsieur le Recteur, l'expression de notre considération distinguée.
+
+[Votre prénom et nom]`,
+      hint: '✏️ Remplacez toutes les zones entre crochets [ ] avant d\'envoyer.'
+    },
+    3: {
+      subject: '',
+      body:
+`Madame, Monsieur,
+
+
+
+
+Bien cordialement,
+
+[Votre prénom et nom]`,
+      hint: '✏️ Rédigez votre message librement. L\'objet et le corps sont entièrement modifiables.'
+    }
+  };
+
+  let currentSituation = null;
+  let shortLinkValue = '';
+
+  function selectSituation(num) {
+    currentSituation = num;
+
+    document.getElementById('card-1').classList.toggle('active', num === 1);
+    document.getElementById('card-2').classList.toggle('active', num === 2);
+    document.getElementById('card-3').classList.toggle('active', num === 3);
+
+    const t = templates[num];
+    document.getElementById('subject').value = t.subject;
+    document.getElementById('body').value = t.body;
+    document.getElementById('hint').textContent = t.hint;
+
+    document.getElementById('editor-section').classList.remove('hidden');
+
+    // Reset previous results
+    document.getElementById('qr-section').classList.add('hidden');
+    document.getElementById('short-link-section').classList.add('hidden');
+    document.getElementById('qrcode').innerHTML = '';
+    shortLinkValue = '';
+
+    setTimeout(() => {
+      document.getElementById('editor-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 80);
+  }
+
+  function buildMailtoUrl() {
+    const subject = document.getElementById('subject').value;
+    const body    = document.getElementById('body').value;
+    return `mailto:${RECIPIENTS}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  }
+
+  function openMailto() {
+    window.location.href = buildMailtoUrl();
+  }
+
+  function generateQR() {
+    const section   = document.getElementById('qr-section');
+    const container = document.getElementById('qrcode');
+    container.innerHTML = '';
+
+    const url = buildMailtoUrl();
+
+    // QR codes handle up to ~2900 bytes; warn if too long
+    if (url.length > 2800) {
+      showToast('Le texte est trop long pour un QR code — raccourcissez le message.');
+      return;
+    }
+
+    try {
+      new QRCode(container, {
+        text: url,
+        width: 220,
+        height: 220,
+        colorDark: '#1a3a5c',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.L
+      });
+      section.classList.remove('hidden');
+      section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } catch (e) {
+      showToast('Erreur lors de la génération du QR code.');
+    }
+  }
+
+  async function generateShortLink() {
+    const section = document.getElementById('short-link-section');
+    const linkEl  = document.getElementById('short-link-text');
+
+    section.classList.remove('hidden');
+    linkEl.textContent = 'Génération en cours…';
+
+    const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.protocol === 'file:';
+
+    if (isLocal) {
+      linkEl.textContent = '⚠️ Le lien court sera disponible une fois le site mis en ligne sur Netlify.';
+      shortLinkValue = '';
+      section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      return;
+    }
+
+    const pageUrl = location.origin + location.pathname + '?s=' + currentSituation;
+
+    try {
+      const res   = await fetch(`https://is.gd/create.php?format=simple&url=${encodeURIComponent(pageUrl)}`);
+      const short = await res.text();
+
+      if (short.startsWith('http')) {
+        linkEl.textContent = short.trim();
+        shortLinkValue = short.trim();
+      } else {
+        throw new Error('unexpected response');
+      }
+    } catch (_) {
+      linkEl.textContent = pageUrl;
+      shortLinkValue = pageUrl;
+    }
+
+    section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function copyShortLink() {
+    if (!shortLinkValue) return;
+    navigator.clipboard.writeText(shortLinkValue).then(() => showToast('Lien copié !'));
+  }
+
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2800);
+  }
+
+  // Auto-select situation from URL param ?s=1 or ?s=2
+  const params = new URLSearchParams(location.search);
+  const s = params.get('s');
+  if (s === '1' || s === '2' || s === '3') selectSituation(parseInt(s));
+</script>
+
+</body>
+</html>
