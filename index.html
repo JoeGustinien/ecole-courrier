@@ -190,31 +190,44 @@
       margin-bottom: 16px;
     }
 
-    .qr-wrapper { position: relative; display: inline-block; margin-bottom: 10px; }
-    #qrcode { display: flex; justify-content: center; }
-    #qrcode img, #qrcode canvas { border-radius: 8px; display: block; }
+    .qr-wrapper {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+      background: #f4f7fb;
+      border-radius: 12px;
+      margin: 8px 0 16px;
+    }
+    #qrcode canvas, #qrcode img {
+      display: block;
+      border-radius: 10px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+      padding: 14px;
+      background: white;
+    }
 
     .stale-overlay {
       display: none;
       position: absolute;
       inset: 0;
-      background: rgba(255,255,255,0.88);
-      border-radius: 8px;
+      background: rgba(244,247,251,0.92);
+      border-radius: 12px;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       gap: 10px;
       cursor: pointer;
     }
-    .stale-overlay p { font-size: 0.82rem; font-weight: 700; color: #d45f00; }
+    .stale-overlay p { font-size: 0.85rem; font-weight: 700; color: #d45f00; }
 
-    #qr-section.stale #qrcode img,
-    #qr-section.stale #qrcode canvas { filter: blur(3px); }
+    #qr-section.stale #qrcode canvas,
+    #qr-section.stale #qrcode img { filter: blur(4px); }
     #qr-section.stale .stale-overlay { display: flex; }
 
     .short-link-box.stale { color: #d45f00; font-style: italic; font-weight: 500; }
 
-    .qr-note { font-size: 0.78rem; color: #9aabbf; margin-top: 6px; }
+    .qr-note { font-size: 0.78rem; color: #9aabbf; margin-top: 4px; }
 
     .short-link-box {
       background: #f4f7fb;
@@ -337,7 +350,10 @@ ce.0931036W@ac-creteil.fr</textarea>
           <span class="btn-secondary" style="padding:8px 18px;font-size:0.82rem;">↻ Régénérer</span>
         </div>
       </div>
-      <p class="qr-note">Sur smartphone : scanner ouvre directement l'appli mail</p>
+      <p class="qr-note">Scannez avec votre smartphone pour ouvrir directement l'appli mail</p>
+      <button class="btn-secondary" style="margin-top:14px;width:100%;" onclick="downloadQR()">
+        ↓ Télécharger le QR code
+      </button>
     </div>
 
     <!-- Short link result -->
@@ -474,8 +490,8 @@ Bien cordialement,
     try {
       new QRCode(container, {
         text: url,
-        width: 220,
-        height: 220,
+        width: 260,
+        height: 260,
         colorDark: '#1a3a5c',
         colorLight: '#ffffff',
         correctLevel: QRCode.CorrectLevel.L
@@ -523,6 +539,15 @@ Bien cordialement,
 
     document.getElementById('short-link-text').classList.remove('stale');
     section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function downloadQR() {
+    const canvas = document.querySelector('#qrcode canvas');
+    if (!canvas) return;
+    const link = document.createElement('a');
+    link.download = 'qr-courrier-ecole.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
   }
 
   function copyShortLink() {
