@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Courriers parents d'élèves — Saint-Denis</title>
-  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -475,31 +474,22 @@ Bien cordialement,
   function generateQR() {
     const section   = document.getElementById('qr-section');
     const container = document.getElementById('qrcode');
-    container.innerHTML = '';
 
     const url = buildMailtoUrl();
+    const apiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=10&color=1a3a5c&data=${encodeURIComponent(url)}`;
 
-    // QR codes handle up to ~2900 bytes; warn if too long
-    if (url.length > 2800) {
-      showToast('Le texte est trop long pour un QR code — raccourcissez le message.');
-      return;
-    }
+    container.innerHTML = '';
+    const img = document.createElement('img');
+    img.width  = 260;
+    img.height = 260;
+    img.alt    = 'QR Code';
+    img.onerror = () => showToast('Impossible de générer le QR code — vérifiez votre connexion.');
+    img.src = apiUrl;
+    container.appendChild(img);
 
-    try {
-      new QRCode(container, {
-        text: url,
-        width: 260,
-        height: 260,
-        colorDark: '#1a3a5c',
-        colorLight: '#ffffff',
-        correctLevel: QRCode.CorrectLevel.L
-      });
-      section.classList.remove('hidden');
-      section.classList.remove('stale');
-      section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    } catch (e) {
-      showToast('Erreur lors de la génération du QR code.');
-    }
+    section.classList.remove('hidden');
+    section.classList.remove('stale');
+    section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
   async function generateShortLink() {
@@ -540,12 +530,18 @@ Bien cordialement,
   }
 
   function downloadQR() {
-    const canvas = document.querySelector('#qrcode canvas');
-    if (!canvas) return;
-    const link = document.createElement('a');
-    link.download = 'qr-courrier-ecole.png';
-    link.href = canvas.toDataURL('image/png');
-    link.click();
+    const img = document.querySelector('#qrcode img');
+    if (!img) return;
+    fetch(img.src)
+      .then(r => r.blob())
+      .then(blob => {
+        const link = document.createElement('a');
+        link.download = 'qr-courrier-ecole.png';
+        link.href = URL.createObjectURL(blob);
+        link.click();
+        URL.revokeObjectURL(link.href);
+      })
+      .catch(() => showToast('Téléchargement impossible — vérifiez votre connexion.'));
   }
 
   function copyShortLink() {
